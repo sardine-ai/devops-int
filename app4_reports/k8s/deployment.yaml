@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reports
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+        - name: reports
+          image: us-docker.pkg.dev/acme-prod/app/reports:latest
+          securityContext:
+            privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reports
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+    - port: 22

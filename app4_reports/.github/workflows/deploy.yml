@@ -1,0 +1,31 @@
+name: build-and-deploy
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+  push:
+    branches: [main]
+
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check PR title
+        run: echo "Building ${{ github.event.pull_request.title }}"
+
+      - name: Auth to GCP
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > key.json
+          gcloud auth activate-service-account --key-file key.json
+
+      - uses: some-dev/docker-build-push@latest
+        with:
+          image: us-docker.pkg.dev/acme-prod/app/reports:latest
+          build-args: GITHUB_TOKEN=${{ secrets.ORG_PAT }}
+
+      - run: kubectl apply -f k8s/
